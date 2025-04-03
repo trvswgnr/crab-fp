@@ -1,4 +1,4 @@
-use crate::{Applicative, Functor, Kinded};
+use crate::{Applicative, Functor, TypeConstructor};
 
 /// Identity trait
 ///
@@ -300,7 +300,7 @@ pub fn option_to_result<T, E>(opt: Option<T>, err: E) -> Result<T, E> {
 pub fn fmap<A, B, FA: Functor<A>, F: FnMut(A) -> B>(
     f: FA,
     g: F,
-) -> <FA::Kind as Kinded>::Container<B> {
+) -> <FA::Kind as TypeConstructor>::Container<B> {
     f.fmap(g)
 }
 
@@ -323,7 +323,7 @@ pub fn fmap<A, B, FA: Functor<A>, F: FnMut(A) -> B>(
 /// let y = pure::<i32, Option<_>>(5);
 /// assert_eq!(y, Some(5));
 /// ```
-pub fn pure<A, FA: Applicative<A>>(a: A) -> <FA::Kind as Kinded>::Container<A> {
+pub fn pure<A, FA: Applicative<A>>(a: A) -> <FA::Kind as TypeConstructor>::Container<A> {
     FA::pure(a)
 }
 
@@ -355,8 +355,8 @@ pub fn pure<A, FA: Applicative<A>>(a: A) -> <FA::Kind as Kinded>::Container<A> {
 /// ```
 pub fn ap<A, B, F, FA>(
     x: FA,
-    fs: <FA::Kind as Kinded>::Container<F>,
-) -> <FA::Kind as Kinded>::Container<B>
+    fs: <FA::Kind as TypeConstructor>::Container<F>,
+) -> <FA::Kind as TypeConstructor>::Container<B>
 where
     F: FnMut(A) -> B,
     FA: Applicative<A>,

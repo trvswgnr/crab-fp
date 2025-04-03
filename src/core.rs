@@ -14,18 +14,12 @@
 //! These traits form a hierarchy (Applicative extends Functor) and enable
 //! composable, type-safe functional programming patterns in Rust.
 
-/// A trait that allows associating a container type with its "kind".
-///
-/// This trait solves the higher-kinded types problem in Rust by providing
-/// a way to associate a generic container type with a concrete type that
-/// represents its "kind". This enables proper type resolution when working
-/// with higher-order abstractions like Functors and Applicatives.
-pub trait Kinded {
-    /// The container type parametrized by type `A`.
-    ///
-    /// This associated type represents the actual container that holds values
-    /// of type `A`. For example, `Option<A>`, `Result<A, E>`, or `Vec<A>`.
+pub trait TypeConstructor {
     type Container<A>;
+}
+
+pub trait Kinded<A> {
+    type Kind: TypeConstructor<Container<A> = Self>;
 }
 
 /// A trait representing types that can be mapped over (functors).
@@ -41,13 +35,7 @@ pub trait Kinded {
 ///
 /// # Type Parameters
 /// * `A` - The type of values contained in this functor
-pub trait Functor<A> {
-    /// The concrete type representing the "kind" of this functor.
-    ///
-    /// This associated type must implement `Kinded` with its `Container<A>`
-    /// associated type equal to `Self`.
-    type Kind: Kinded<Container<A> = Self>;
-
+pub trait Functor<A>: Kinded<A> {
     /// Maps a function over the contained value(s).
     ///
     /// Applies the function `f` to each value contained in this functor,
@@ -58,7 +46,7 @@ pub trait Functor<A> {
     ///
     /// # Returns
     /// A new container of the same kind containing the transformed values.
-    fn fmap<B, F: FnMut(A) -> B>(self, f: F) -> <Self::Kind as Kinded>::Container<B>;
+    fn fmap<B, F: FnMut(A) -> B>(self, f: F) -> <Self::Kind as TypeConstructor>::Container<B>;
 }
 
 /// A trait representing applicative functors.
@@ -85,7 +73,7 @@ pub trait Applicative<A>: Functor<A> {
     ///
     /// # Returns
     /// A new container of the same kind containing the provided value.
-    fn pure(b: A) -> <Self::Kind as Kinded>::Container<A>;
+    fn pure(b: A) -> <Self::Kind as TypeConstructor>::Container<A>;
 
     /// Applies functions contained in an applicative context to values in this applicative context.
     ///
@@ -99,13 +87,39 @@ pub trait Applicative<A>: Functor<A> {
     /// A new container of the same kind containing the results of applying the functions to the values.
     fn apply<B, F: FnMut(A) -> B>(
         self,
-        ff: <Self::Kind as Kinded>::Container<F>,
-    ) -> <Self::Kind as Kinded>::Container<B>;
+        ff: <Self::Kind as TypeConstructor>::Container<F>,
+    ) -> <Self::Kind as TypeConstructor>::Container<B>;
 }
 
+/// A trait representing monads.
+///
+/// Monads extend the capabilities of applicative functors by providing a way to
+/// sequence computations that may have effects. The `bind` operation (also known
+/// as `flatMap` or `>>=`) allows chaining operations that return values wrapped
+/// in the same context.
+///
+/// Laws:
+/// - Left identity: `pure(a).bind(f) == f(a)`
+/// - Right identity: `m.bind(pure) == m`
+/// - Associativity: `m.bind(f).bind(g) == m.bind(|x| f(x).bind(g))`
+///
+/// # Type Parameters
+/// * `A` - The type of values contained in this monad
 pub trait Monad<A>: Applicative<A> {
-    fn bind<B, F: FnMut(A) -> <Self::Kind as Kinded>::Container<B>>(
+    /// Binds a function to the value in this monad.
+    ///
+    /// This operation allows chaining computations that return values wrapped in
+    /// the same context, enabling sequential processing with potential effects.
+    ///
+    /// # Parameters
+    /// * `f` - A function that transforms values of type `A` into a new monad
+    ///   containing values of type `B`
+    ///
+    /// # Returns
+    /// A new monad of the same kind containing the results of applying the function
+    /// and flattening the resulting structure.
+    fn bind<B, F: FnMut(A) -> <Self::Kind as TypeConstructor>::Container<B>>(
         self,
         f: F,
-    ) -> <Self::Kind as Kinded>::Container<B>;
+    ) -> <Self::Kind as TypeConstructor>::Container<B>;
 }

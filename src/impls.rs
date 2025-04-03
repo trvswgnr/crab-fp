@@ -19,12 +19,15 @@ use crate::*;
 
 pub struct OptionKind;
 
-impl Kinded for OptionKind {
+impl TypeConstructor for OptionKind {
     type Container<T> = Option<T>;
 }
 
-impl<A> Functor<A> for Option<A> {
+impl<A> Kinded<A> for Option<A> {
     type Kind = OptionKind;
+}
+
+impl<A> Functor<A> for Option<A> {
     fn fmap<B, F: FnOnce(A) -> B>(self, f: F) -> Option<B> {
         self.map(f)
     }
@@ -43,10 +46,10 @@ impl<A> Applicative<A> for Option<A> {
 }
 
 impl<A> Monad<A> for Option<A> {
-    fn bind<B, F: FnOnce(A) -> <Self::Kind as Kinded>::Container<B>>(
+    fn bind<B, F: FnOnce(A) -> <Self::Kind as TypeConstructor>::Container<B>>(
         self,
         f: F,
-    ) -> <Self::Kind as Kinded>::Container<B> {
+    ) -> <Self::Kind as TypeConstructor>::Container<B> {
         self.and_then(f)
     }
 }
@@ -231,12 +234,15 @@ mod option_tests {
 
 pub struct ResultKind<E>(std::marker::PhantomData<E>);
 
-impl<E> Kinded for ResultKind<E> {
+impl<E> TypeConstructor for ResultKind<E> {
     type Container<A> = Result<A, E>;
 }
 
-impl<A, E> Functor<A> for Result<A, E> {
+impl<A, E> Kinded<A> for Result<A, E> {
     type Kind = ResultKind<E>;
+}
+
+impl<A, E> Functor<A> for Result<A, E> {
     fn fmap<B, F: FnOnce(A) -> B>(self, f: F) -> Result<B, E> {
         self.map(f)
     }
@@ -257,10 +263,10 @@ impl<A, E> Applicative<A> for Result<A, E> {
 }
 
 impl<A, E> Monad<A> for Result<A, E> {
-    fn bind<B, F: FnOnce(A) -> <Self::Kind as Kinded>::Container<B>>(
+    fn bind<B, F: FnOnce(A) -> <Self::Kind as TypeConstructor>::Container<B>>(
         self,
         f: F,
-    ) -> <Self::Kind as Kinded>::Container<B> {
+    ) -> <Self::Kind as TypeConstructor>::Container<B> {
         self.and_then(f)
     }
 }
@@ -448,12 +454,15 @@ mod result_tests {
 
 pub struct VecKind;
 
-impl Kinded for VecKind {
+impl TypeConstructor for VecKind {
     type Container<T> = Vec<T>;
 }
 
-impl<A> Functor<A> for Vec<A> {
+impl<A> Kinded<A> for Vec<A> {
     type Kind = VecKind;
+}
+
+impl<A> Functor<A> for Vec<A> {
     fn fmap<B, F: FnMut(A) -> B>(self, f: F) -> Vec<B> {
         self.into_iter().map(f).collect()
     }
@@ -499,10 +508,10 @@ impl<A> Applicative<A> for Vec<A> {
 }
 
 impl<A> Monad<A> for Vec<A> {
-    fn bind<B, F: FnMut(A) -> <Self::Kind as Kinded>::Container<B>>(
+    fn bind<B, F: FnMut(A) -> <Self::Kind as TypeConstructor>::Container<B>>(
         self,
         f: F,
-    ) -> <Self::Kind as Kinded>::Container<B> {
+    ) -> <Self::Kind as TypeConstructor>::Container<B> {
         self.into_iter().flat_map(f).collect()
     }
 }
