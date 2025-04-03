@@ -1,0 +1,11 @@
+[package]
+name = "crab-fp"
+version = "0.1.0"
+edition = "2024"
+authors = ["Travis Aaron Wagner <dev@techsavvytravvy.com>"]
+license = "MIT"
+description = "A crate for functional programming in Rust with traits for Functor, Applicative, and Monad."
+readme = "README.md"
+repository = "https://github.com/trvswgnr/crab-fp"
+
+[dependencies]
