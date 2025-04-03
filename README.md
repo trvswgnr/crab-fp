@@ -40,7 +40,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-fp = "0.1.0"  # Replace with the actual version
+crab-fp = { git = "https://github.com/trvswgnr/crab-fp" }
 ```
 
 Then import everything and use:
