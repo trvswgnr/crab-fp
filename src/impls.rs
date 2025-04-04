@@ -19,8 +19,8 @@ use crate::*;
 
 pub struct OptionKind;
 
-impl TypeConstructor for OptionKind {
-    type Container<T> = Option<T>;
+impl Endofunctor for OptionKind {
+    type Domain<A> = Option<A>;
 }
 
 impl<A> Kinded<A> for Option<A> {
@@ -46,10 +46,7 @@ impl<A> Applicative<A> for Option<A> {
 }
 
 impl<A> Monad<A> for Option<A> {
-    fn bind<B, F: FnOnce(A) -> <Self::Kind as TypeConstructor>::Container<B>>(
-        self,
-        f: F,
-    ) -> <Self::Kind as TypeConstructor>::Container<B> {
+    fn bind<B, F: FnOnce(A) -> Apply<Self::Kind, B>>(self, f: F) -> Apply<Self::Kind, B> {
         self.and_then(f)
     }
 }
@@ -234,8 +231,8 @@ mod option_tests {
 
 pub struct ResultKind<E>(std::marker::PhantomData<E>);
 
-impl<E> TypeConstructor for ResultKind<E> {
-    type Container<A> = Result<A, E>;
+impl<E> Endofunctor for ResultKind<E> {
+    type Domain<A> = Result<A, E>;
 }
 
 impl<A, E> Kinded<A> for Result<A, E> {
@@ -263,10 +260,10 @@ impl<A, E> Applicative<A> for Result<A, E> {
 }
 
 impl<A, E> Monad<A> for Result<A, E> {
-    fn bind<B, F: FnOnce(A) -> <Self::Kind as TypeConstructor>::Container<B>>(
+    fn bind<B, F: FnOnce(A) -> Result<B, E>>(
         self,
         f: F,
-    ) -> <Self::Kind as TypeConstructor>::Container<B> {
+    ) -> Result<B, E> {
         self.and_then(f)
     }
 }
@@ -454,8 +451,8 @@ mod result_tests {
 
 pub struct VecKind;
 
-impl TypeConstructor for VecKind {
-    type Container<T> = Vec<T>;
+impl Endofunctor for VecKind {
+    type Domain<A> = Vec<A>;
 }
 
 impl<A> Kinded<A> for Vec<A> {
@@ -508,10 +505,7 @@ impl<A> Applicative<A> for Vec<A> {
 }
 
 impl<A> Monad<A> for Vec<A> {
-    fn bind<B, F: FnMut(A) -> <Self::Kind as TypeConstructor>::Container<B>>(
-        self,
-        f: F,
-    ) -> <Self::Kind as TypeConstructor>::Container<B> {
+    fn bind<B, F: FnMut(A) -> Apply<Self::Kind, B>>(self, f: F) -> Apply<Self::Kind, B> {
         self.into_iter().flat_map(f).collect()
     }
 }

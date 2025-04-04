@@ -14,13 +14,17 @@
 //! These traits form a hierarchy (Applicative extends Functor) and enable
 //! composable, type-safe functional programming patterns in Rust.
 
-pub trait TypeConstructor {
-    type Container<A>;
+pub struct Never;
+
+pub trait Endofunctor {
+    type Domain<T>;
 }
 
-pub trait Kinded<A> {
-    type Kind: TypeConstructor<Container<A> = Self>;
+pub trait Kinded<T> {
+    type Kind: Endofunctor<Domain<T> = Self>;
 }
+
+pub type Apply<F, A> = <F as Endofunctor>::Domain<A>;
 
 /// A trait representing types that can be mapped over (functors).
 ///
@@ -46,7 +50,7 @@ pub trait Functor<A>: Kinded<A> {
     ///
     /// # Returns
     /// A new container of the same kind containing the transformed values.
-    fn fmap<B, F: FnMut(A) -> B>(self, f: F) -> <Self::Kind as TypeConstructor>::Container<B>;
+    fn fmap<B, M: FnMut(A) -> B>(self, f: M) -> Apply<Self::Kind, B>;
 }
 
 /// A trait representing applicative functors.
@@ -73,7 +77,7 @@ pub trait Applicative<A>: Functor<A> {
     ///
     /// # Returns
     /// A new container of the same kind containing the provided value.
-    fn pure(b: A) -> <Self::Kind as TypeConstructor>::Container<A>;
+    fn pure(b: A) -> Apply<Self::Kind, A>;
 
     /// Applies functions contained in an applicative context to values in this applicative context.
     ///
@@ -85,10 +89,7 @@ pub trait Applicative<A>: Functor<A> {
     ///
     /// # Returns
     /// A new container of the same kind containing the results of applying the functions to the values.
-    fn apply<B, F: FnMut(A) -> B>(
-        self,
-        ff: <Self::Kind as TypeConstructor>::Container<F>,
-    ) -> <Self::Kind as TypeConstructor>::Container<B>;
+    fn apply<B, F: FnMut(A) -> B>(self, ff: Apply<Self::Kind, F>) -> Apply<Self::Kind, B>;
 }
 
 /// A trait representing monads.
@@ -118,8 +119,5 @@ pub trait Monad<A>: Applicative<A> {
     /// # Returns
     /// A new monad of the same kind containing the results of applying the function
     /// and flattening the resulting structure.
-    fn bind<B, F: FnMut(A) -> <Self::Kind as TypeConstructor>::Container<B>>(
-        self,
-        f: F,
-    ) -> <Self::Kind as TypeConstructor>::Container<B>;
+    fn bind<B, F: FnMut(A) -> Apply<Self::Kind, B>>(self, f: F) -> Apply<Self::Kind, B>;
 }

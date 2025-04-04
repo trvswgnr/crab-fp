@@ -1,4 +1,4 @@
-use crate::{Applicative, Functor, TypeConstructor};
+use crate::{Applicative, Apply, Endofunctor, Functor};
 
 /// Identity trait
 ///
@@ -297,10 +297,7 @@ pub fn option_to_result<T, E>(opt: Option<T>, err: E) -> Result<T, E> {
 /// let y = fmap(x, f);
 /// assert_eq!(y, Ok(10));
 /// ```
-pub fn fmap<A, B, FA: Functor<A>, F: FnMut(A) -> B>(
-    f: FA,
-    g: F,
-) -> <FA::Kind as TypeConstructor>::Container<B> {
+pub fn fmap<A, B, FA: Functor<A>, F: FnMut(A) -> B>(f: FA, g: F) -> Apply<FA::Kind, B> {
     f.fmap(g)
 }
 
@@ -323,7 +320,7 @@ pub fn fmap<A, B, FA: Functor<A>, F: FnMut(A) -> B>(
 /// let y = pure::<i32, Option<_>>(5);
 /// assert_eq!(y, Some(5));
 /// ```
-pub fn pure<A, FA: Applicative<A>>(a: A) -> <FA::Kind as TypeConstructor>::Container<A> {
+pub fn pure<A, FA: Applicative<A>>(a: A) -> Apply<FA::Kind, A> {
     FA::pure(a)
 }
 
@@ -353,10 +350,7 @@ pub fn pure<A, FA: Applicative<A>>(a: A) -> <FA::Kind as TypeConstructor>::Conta
 /// let y = ap(x, f);
 /// assert_eq!(y, Some(6));
 /// ```
-pub fn ap<A, B, F, FA>(
-    x: FA,
-    fs: <FA::Kind as TypeConstructor>::Container<F>,
-) -> <FA::Kind as TypeConstructor>::Container<B>
+pub fn ap<A, B, F, FA>(x: FA, fs: Apply<FA::Kind, F>) -> Apply<FA::Kind, B>
 where
     F: FnMut(A) -> B,
     FA: Applicative<A>,
@@ -404,6 +398,12 @@ mod standalone_pure_tests {
     fn test_pure() {
         let y = pure::<i32, Option<_>>(5);
         assert_eq!(y, Some(5));
+
+        let y = pure::<i32, Vec<_>>(5);
+        assert_eq!(y, vec![5]);
+
+        let y = pure::<i32, Result<_, &str>>(5);
+        assert_eq!(y, Ok(5));
     }
 }
 
