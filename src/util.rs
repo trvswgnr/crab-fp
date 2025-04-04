@@ -1,4 +1,4 @@
-use crate::{Applicative, Apply, Endofunctor, Functor};
+use crate::{Applicative, Apply, TypeConstructor, Functor};
 
 /// Identity trait
 ///

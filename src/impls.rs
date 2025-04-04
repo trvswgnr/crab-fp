@@ -19,8 +19,8 @@ use crate::*;
 
 pub struct OptionKind;
 
-impl Endofunctor for OptionKind {
-    type Domain<A> = Option<A>;
+impl TypeConstructor for OptionKind {
+    type Type<A> = Option<A>;
 }
 
 impl<A> Kinded<A> for Option<A> {
@@ -231,8 +231,8 @@ mod option_tests {
 
 pub struct ResultKind<E>(std::marker::PhantomData<E>);
 
-impl<E> Endofunctor for ResultKind<E> {
-    type Domain<A> = Result<A, E>;
+impl<E> TypeConstructor for ResultKind<E> {
+    type Type<A> = Result<A, E>;
 }
 
 impl<A, E> Kinded<A> for Result<A, E> {
@@ -451,8 +451,8 @@ mod result_tests {
 
 pub struct VecKind;
 
-impl Endofunctor for VecKind {
-    type Domain<A> = Vec<A>;
+impl TypeConstructor for VecKind {
+    type Type<A> = Vec<A>;
 }
 
 impl<A> Kinded<A> for Vec<A> {

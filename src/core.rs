@@ -16,15 +16,15 @@
 
 pub struct Never;
 
-pub trait Endofunctor {
-    type Domain<T>;
+pub trait TypeConstructor {
+    type Type<T>;
 }
 
 pub trait Kinded<T> {
-    type Kind: Endofunctor<Domain<T> = Self>;
+    type Kind: TypeConstructor<Type<T> = Self>;
 }
 
-pub type Apply<F, A> = <F as Endofunctor>::Domain<A>;
+pub type Apply<F, A> = <F as TypeConstructor>::Type<A>;
 
 /// A trait representing types that can be mapped over (functors).
 ///
