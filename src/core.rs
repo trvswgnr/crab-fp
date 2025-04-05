@@ -17,14 +17,14 @@
 pub struct Never;
 
 pub trait TypeConstructor {
-    type Type<T>;
+    type Type<A, B, C, D>;
 }
 
-pub trait Kinded<T> {
-    type Kind: TypeConstructor<Type<T> = Self>;
+pub trait Kinded<A, B = Never, C = Never, D = Never> {
+    type Kind: TypeConstructor<Type<A, B, C, D> = Self>;
 }
 
-pub type Apply<F, A> = <F as TypeConstructor>::Type<A>;
+pub type Apply<F, A, B = Never, C = Never, D = Never> = <F as TypeConstructor>::Type<A, B, C, D>;
 
 /// A trait representing types that can be mapped over (functors).
 ///

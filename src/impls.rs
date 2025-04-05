@@ -20,7 +20,7 @@ use crate::*;
 pub struct OptionKind;
 
 impl TypeConstructor for OptionKind {
-    type Type<A> = Option<A>;
+    type Type<A, B, C, D> = Option<A>;
 }
 
 impl<A> Kinded<A> for Option<A> {
@@ -232,7 +232,7 @@ mod option_tests {
 pub struct ResultKind<E>(std::marker::PhantomData<E>);
 
 impl<E> TypeConstructor for ResultKind<E> {
-    type Type<A> = Result<A, E>;
+    type Type<A, B, C, D> = Result<A, E>;
 }
 
 impl<A, E> Kinded<A> for Result<A, E> {
@@ -452,7 +452,7 @@ mod result_tests {
 pub struct VecKind;
 
 impl TypeConstructor for VecKind {
-    type Type<A> = Vec<A>;
+    type Type<A, B, C, D> = Vec<A>;
 }
 
 impl<A> Kinded<A> for Vec<A> {
