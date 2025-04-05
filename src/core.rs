@@ -16,7 +16,7 @@
 //! These traits form a hierarchy (Applicative extends Functor) and enable
 //! composable, type-safe functional programming patterns in Rust.
 
-/// A trait representing a type constructor of kind `* -> *`.
+/// A type constructor of kind `* -> *`.
 ///
 /// This provides a way to implement higher-kinded types in Rust's type system.
 /// Type constructors take a type and produce another type, allowing for
@@ -25,7 +25,7 @@ pub trait TypeCtor1 {
     type Type<A>;
 }
 
-/// A trait representing a type constructor of kind `* -> * -> *`.
+/// A type constructor of kind `* -> * -> *`.
 ///
 /// This provides a way to implement binary higher-kinded types in Rust's type system.
 /// Binary type constructors take two types and produce another type, like `Result<T, E>`
@@ -182,8 +182,11 @@ pub trait Bifunctor<A, B>: Kinded2<A, B> {
     ///
     /// # Returns
     /// A new bifunctor containing the transformed values.
-    fn bimap<C, D, F: FnMut(A) -> C, G: FnMut(B) -> D>(self, f: F, g: G)
-    -> Apply2<Self::Kind, C, D>;
+    fn bimap<C, D, F: FnMut(A) -> C, G: FnMut(B) -> D>(
+        self,
+        f: F,
+        g: G,
+    ) -> Apply2<Self::Kind, C, D>;
 
     /// Maps a function over the first type parameter of the bifunctor.
     ///

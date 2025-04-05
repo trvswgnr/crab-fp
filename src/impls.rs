@@ -230,18 +230,19 @@ mod option_tests {
 }
 
 pub struct ResultKind<E>(std::marker::PhantomData<E>);
-pub struct ResultKind2;
 
 impl<E> TypeCtor1 for ResultKind<E> {
     type Type<A> = Result<A, E>;
 }
 
-impl TypeCtor2 for ResultKind2 {
-    type Type<A, B> = Result<A, B>;
-}
-
 impl<A, E> Kinded1<A> for Result<A, E> {
     type Kind = ResultKind<E>;
+}
+
+pub struct ResultKind2;
+
+impl TypeCtor2 for ResultKind2 {
+    type Type<A, B> = Result<A, B>;
 }
 
 impl<A, E> Kinded2<A, E> for Result<A, E> {
