@@ -50,11 +50,11 @@ pub fn identity<A>(a: A) -> A {
 /// assert_eq!(add_one_then_multiply_by_two(5), 12);
 /// ```
 pub trait Composable<A, B> {
-    fn compose<C>(self, f: fn(C) -> A) -> impl Fn(C) -> B;
+    fn compose<C, F: Fn(C) -> A>(self, f: F) -> impl Fn(C) -> B;
 }
 
-impl<A, B, F: Fn(A) -> B> Composable<A, B> for F {
-    fn compose<C>(self, f: fn(C) -> A) -> impl Fn(C) -> B {
+impl<A, B, ThisFn: Fn(A) -> B> Composable<A, B> for ThisFn {
+    fn compose<C, FF: Fn(C) -> A>(self, f: FF) -> impl Fn(C) -> B {
         move |c| self(f(c))
     }
 }

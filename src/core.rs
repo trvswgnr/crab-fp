@@ -1,6 +1,6 @@
 //! This module defines the core traits for functional programming typeclasses.
 //!
-//! It provides the foundation for implementing functional programming\
+//! It provides the foundation for implementing functional programming
 //! abstractions in Rust:
 //! - `Kinded` - Associates container types with their "kind" for proper type
 //!   resolution
@@ -16,54 +16,42 @@
 //! These traits form a hierarchy (Applicative extends Functor) and enable
 //! composable, type-safe functional programming patterns in Rust.
 
-/// A type constructor of kind `* -> *`.
-///
-/// This provides a way to implement higher-kinded types in Rust's type system.
-/// Type constructors take a type and produce another type, allowing for
-/// generic container types like `Vec<T>` or `Option<T>`.
-pub trait TypeCtor1 {
+pub trait Generic {
+    type Type;
+}
+
+pub trait Generic1 {
     type Type<A>;
 }
 
-/// A type constructor of kind `* -> * -> *`.
-///
-/// This provides a way to implement binary higher-kinded types in Rust's type system.
-/// Binary type constructors take two types and produce another type, like `Result<T, E>`
-/// or `Either<L, R>`.
-pub trait TypeCtor2 {
+pub trait Generic2 {
     type Type<A, B>;
 }
 
-/// Associates a concrete type with its unary type constructor.
-///
-/// This trait allows a type to specify its "kind" - the type constructor
-/// that, when applied to type parameter `A`, produces this type.
-/// It's a key component for implementing higher-kinded polymorphism.
-pub trait Kinded1<A> {
-    type Kind: TypeCtor1<Type<A> = Self>;
+pub trait Rep {
+    type Kind: Generic<Type = Self>;
 }
 
-/// Associates a concrete type with its binary type constructor.
-///
-/// This trait allows a type to specify its "kind" - the type constructor
-/// that, when applied to type parameters `A` and `B`, produces this type.
-/// Enables higher-kinded polymorphism for types with two type parameters.
-pub trait Kinded2<A, B> {
-    type Kind: TypeCtor2<Type<A, B> = Self>;
+pub trait Rep1<A> {
+    type Kind: Generic1<Type<A> = Self>;
+}
+
+pub trait Rep2<A, B> {
+    type Kind: Generic2<Type<A, B> = Self>;
 }
 
 /// Applies a unary type constructor to a type parameter.
 ///
 /// This type alias simplifies the syntax of type application, making
 /// higher-kinded type patterns more readable and concise.
-pub type Apply1<F, A> = <F as TypeCtor1>::Type<A>;
+pub type Apply1<F, A> = <F as Generic1>::Type<A>;
 
 /// Applies a binary type constructor to two type parameters.
 ///
 /// This type alias simplifies the syntax of type application, making
 /// higher-kinded type patterns more readable and concise when working
 /// with binary type constructors.
-pub type Apply2<F, A, B> = <F as TypeCtor2>::Type<A, B>;
+pub type Apply2<F, A, B> = <F as Generic2>::Type<A, B>;
 
 /// A trait representing types that can be mapped over (functors).
 ///
@@ -78,7 +66,7 @@ pub type Apply2<F, A, B> = <F as TypeCtor2>::Type<A, B>;
 ///
 /// # Type Parameters
 /// * `A` - The type of values contained in this functor
-pub trait Functor<A>: Kinded1<A> {
+pub trait Functor<A>: Rep1<A> {
     /// Maps a function over the contained value(s).
     ///
     /// Applies the function `f` to each value contained in this functor,
@@ -173,7 +161,7 @@ pub trait Monad<A>: Applicative<A> {
 /// # Type Parameters
 /// * `A` - The type of first values contained in this bifunctor
 /// * `B` - The type of second values contained in this bifunctor
-pub trait Bifunctor<A, B>: Kinded2<A, B> {
+pub trait Bifunctor<A, B>: Rep2<A, B> {
     /// Maps functions over both type parameters of the bifunctor.
     ///
     /// # Parameters

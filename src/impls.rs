@@ -19,11 +19,11 @@ use crate::*;
 
 pub struct OptionKind;
 
-impl TypeCtor1 for OptionKind {
+impl Generic1 for OptionKind {
     type Type<A> = Option<A>;
 }
 
-impl<A> Kinded1<A> for Option<A> {
+impl<A> Rep1<A> for Option<A> {
     type Kind = OptionKind;
 }
 
@@ -231,21 +231,21 @@ mod option_tests {
 
 pub struct ResultKind<E>(std::marker::PhantomData<E>);
 
-impl<E> TypeCtor1 for ResultKind<E> {
+impl<E> Generic1 for ResultKind<E> {
     type Type<A> = Result<A, E>;
 }
 
-impl<A, E> Kinded1<A> for Result<A, E> {
+impl<A, E> Rep1<A> for Result<A, E> {
     type Kind = ResultKind<E>;
 }
 
 pub struct ResultKind2;
 
-impl TypeCtor2 for ResultKind2 {
+impl Generic2 for ResultKind2 {
     type Type<A, B> = Result<A, B>;
 }
 
-impl<A, E> Kinded2<A, E> for Result<A, E> {
+impl<A, E> Rep2<A, E> for Result<A, E> {
     type Kind = ResultKind2;
 }
 
@@ -565,11 +565,11 @@ mod result_tests {
 
 pub struct VecKind;
 
-impl TypeCtor1 for VecKind {
+impl Generic1 for VecKind {
     type Type<A> = Vec<A>;
 }
 
-impl<A> Kinded1<A> for Vec<A> {
+impl<A> Rep1<A> for Vec<A> {
     type Kind = VecKind;
 }
 
