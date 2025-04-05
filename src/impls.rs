@@ -19,11 +19,11 @@ use crate::*;
 
 pub struct OptionKind;
 
-impl TypeConstructor for OptionKind {
-    type Type<A, B, C, D> = Option<A>;
+impl TypeCtor1 for OptionKind {
+    type Type<A> = Option<A>;
 }
 
-impl<A> Kinded<A> for Option<A> {
+impl<A> Kinded1<A> for Option<A> {
     type Kind = OptionKind;
 }
 
@@ -46,7 +46,7 @@ impl<A> Applicative<A> for Option<A> {
 }
 
 impl<A> Monad<A> for Option<A> {
-    fn bind<B, F: FnOnce(A) -> Apply<Self::Kind, B>>(self, f: F) -> Apply<Self::Kind, B> {
+    fn bind<B, F: FnOnce(A) -> Apply1<Self::Kind, B>>(self, f: F) -> Apply1<Self::Kind, B> {
         self.and_then(f)
     }
 }
@@ -230,13 +230,22 @@ mod option_tests {
 }
 
 pub struct ResultKind<E>(std::marker::PhantomData<E>);
+pub struct ResultKind2;
 
-impl<E> TypeConstructor for ResultKind<E> {
-    type Type<A, B, C, D> = Result<A, E>;
+impl<E> TypeCtor1 for ResultKind<E> {
+    type Type<A> = Result<A, E>;
 }
 
-impl<A, E> Kinded<A> for Result<A, E> {
+impl TypeCtor2 for ResultKind2 {
+    type Type<A, B> = Result<A, B>;
+}
+
+impl<A, E> Kinded1<A> for Result<A, E> {
     type Kind = ResultKind<E>;
+}
+
+impl<A, E> Kinded2<A, E> for Result<A, E> {
+    type Kind = ResultKind2;
 }
 
 impl<A, E> Functor<A> for Result<A, E> {
@@ -260,11 +269,31 @@ impl<A, E> Applicative<A> for Result<A, E> {
 }
 
 impl<A, E> Monad<A> for Result<A, E> {
-    fn bind<B, F: FnOnce(A) -> Result<B, E>>(
-        self,
-        f: F,
-    ) -> Result<B, E> {
+    fn bind<B, F: FnOnce(A) -> Result<B, E>>(self, f: F) -> Result<B, E> {
         self.and_then(f)
+    }
+}
+
+impl<A, B> Bifunctor<A, B> for Result<A, B> {
+    fn bimap<C, D, F: FnMut(A) -> C, G: FnMut(B) -> D>(self, mut f: F, mut g: G) -> Result<C, D> {
+        match self {
+            Ok(a) => Ok(f(a)),
+            Err(b) => Err(g(b)),
+        }
+    }
+
+    fn first<C, F: FnMut(A) -> C>(self, mut f: F) -> Result<C, B> {
+        match self {
+            Ok(a) => Ok(f(a)),
+            Err(b) => Err(b),
+        }
+    }
+
+    fn second<D, G: FnMut(B) -> D>(self, mut g: G) -> Result<A, D> {
+        match self {
+            Ok(a) => Ok(a),
+            Err(b) => Err(g(b)),
+        }
     }
 }
 
@@ -447,15 +476,99 @@ mod result_tests {
             assert_eq!(result, Err("operation failed"));
         }
     }
+
+    mod bifunctor {
+        use super::*;
+
+        #[test]
+        fn bimap() {
+            // Test Ok case
+            let r: Result<i32, &str> = Ok(5);
+            let result = r.bimap(|x| x * 2, |s: &str| s.to_string());
+            assert_eq!(result, Ok(10));
+
+            // Test Err case
+            let r: Result<i32, &str> = Err("failed");
+            let result = r.bimap(|x| x * 2, |s: &str| s.to_string());
+            assert_eq!(result, Err("failed".to_string()));
+        }
+
+        #[test]
+        fn first() {
+            // Test Ok case
+            let r: Result<i32, &str> = Ok(5);
+            let result = r.first(|x| x * 2);
+            assert_eq!(result, Ok(10));
+
+            // Test Err case
+            let r: Result<i32, &str> = Err("failed");
+            let result = r.first(|x| x * 2);
+            assert_eq!(result, Err("failed"));
+        }
+
+        #[test]
+        fn second() {
+            // Test Ok case
+            let r: Result<i32, &str> = Ok(5);
+            let result = r.second(|s: &str| s.to_string());
+            assert_eq!(result, Ok(5));
+
+            // Test Err case
+            let r: Result<i32, &str> = Err("failed");
+            let result = r.second(|s: &str| s.to_string());
+            assert_eq!(result, Err("failed".to_string()));
+        }
+
+        #[test]
+        fn identity_law() {
+            // Identity law: bimap id id = id
+            let ok_val: Result<i32, &str> = Ok(5);
+            let err_val: Result<i32, &str> = Err("error");
+
+            assert_eq!(ok_val.bimap(identity, |s: &str| s), ok_val);
+            assert_eq!(err_val.bimap(identity, |s: &str| s), err_val);
+        }
+
+        #[test]
+        fn composition_law() {
+            // Composition law: bimap (f . g) (h . i) = bimap f h . bimap g i
+            let f = |x: i32| x.to_string();
+            let g = |x: i32| x * 2;
+            let h = |s: String| format!("Error: {}", s);
+            let i = |s: &str| format!("{} occurred", s);
+
+            // Test with Ok value
+            let r: Result<i32, &str> = Ok(5);
+
+            // Left side: bimap (f . g) (h . i)
+            let left = r.bimap(|x| f(g(x)), |s: &str| h(i(s)));
+
+            // Right side: bimap f h . bimap g i
+            let right = r.bimap(g, i).bimap(f, h);
+
+            assert_eq!(left, right);
+
+            // Test with Err value
+            let r: Result<i32, &str> = Err("failed");
+
+            // Left side: bimap (f . g) (h . i)
+            let left = r.bimap(|x| f(g(x)), |s: &str| h(i(s)));
+
+            // Right side: bimap f h . bimap g i
+            let right = r.bimap(g, i).bimap(f, h);
+
+            assert_eq!(left, right);
+        }
+    }
 }
 
 pub struct VecKind;
 
-impl TypeConstructor for VecKind {
-    type Type<A, B, C, D> = Vec<A>;
+impl TypeCtor1 for VecKind {
+    type Type<A> = Vec<A>;
 }
 
-impl<A> Kinded<A> for Vec<A> {
+impl<A> Kinded1<A> for Vec<A> {
     type Kind = VecKind;
 }
 
@@ -505,7 +618,7 @@ impl<A> Applicative<A> for Vec<A> {
 }
 
 impl<A> Monad<A> for Vec<A> {
-    fn bind<B, F: FnMut(A) -> Apply<Self::Kind, B>>(self, f: F) -> Apply<Self::Kind, B> {
+    fn bind<B, F: FnMut(A) -> Apply1<Self::Kind, B>>(self, f: F) -> Apply1<Self::Kind, B> {
         self.into_iter().flat_map(f).collect()
     }
 }

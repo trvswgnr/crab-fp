@@ -18,7 +18,7 @@ fn format_price(num: u32) -> String {
 ///
 /// This demonstrates how the same business logic can be applied
 /// uniformly across different container types (Vec, Option, Result, etc.).
-fn process_data<F: Functor<u32>>(data: F) -> Apply<F::Kind, String> {
+fn process_data<F: Functor<u32>>(data: F) -> Apply1<F::Kind, String> {
     data.fmap(calculate_price).fmap(format_price)
 }
 
