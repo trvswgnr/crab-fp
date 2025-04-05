@@ -16,42 +16,45 @@
 //! These traits form a hierarchy (Applicative extends Functor) and enable
 //! composable, type-safe functional programming patterns in Rust.
 
+/// Representable types of kind *. 
 pub trait Generic {
-    type Type;
+    type Rep;
 }
 
+/// Representable types of kind * -> *
 pub trait Generic1 {
-    type Type<A>;
+    type Rep1<A>;
 }
 
+/// Representable types of kind * -> * -> *
 pub trait Generic2 {
-    type Type<A, B>;
+    type Rep2<A, B>;
 }
 
-pub trait Rep {
-    type Kind: Generic<Type = Self>;
+pub trait Kinded {
+    type Kind: Generic<Rep = Self>;
 }
 
-pub trait Rep1<A> {
-    type Kind: Generic1<Type<A> = Self>;
+pub trait Kinded1<A> {
+    type Kind1: Generic1<Rep1<A> = Self>;
 }
 
-pub trait Rep2<A, B> {
-    type Kind: Generic2<Type<A, B> = Self>;
+pub trait Kinded2<A, B> {
+    type Kind2: Generic2<Rep2<A, B> = Self>;
 }
 
 /// Applies a unary type constructor to a type parameter.
 ///
 /// This type alias simplifies the syntax of type application, making
 /// higher-kinded type patterns more readable and concise.
-pub type Apply1<F, A> = <F as Generic1>::Type<A>;
+pub type Apply1<F, A> = <F as Generic1>::Rep1<A>;
 
 /// Applies a binary type constructor to two type parameters.
 ///
 /// This type alias simplifies the syntax of type application, making
 /// higher-kinded type patterns more readable and concise when working
 /// with binary type constructors.
-pub type Apply2<F, A, B> = <F as Generic2>::Type<A, B>;
+pub type Apply2<F, A, B> = <F as Generic2>::Rep2<A, B>;
 
 /// A trait representing types that can be mapped over (functors).
 ///
@@ -66,7 +69,7 @@ pub type Apply2<F, A, B> = <F as Generic2>::Type<A, B>;
 ///
 /// # Type Parameters
 /// * `A` - The type of values contained in this functor
-pub trait Functor<A>: Rep1<A> {
+pub trait Functor<A>: Kinded1<A> {
     /// Maps a function over the contained value(s).
     ///
     /// Applies the function `f` to each value contained in this functor,
@@ -77,7 +80,7 @@ pub trait Functor<A>: Rep1<A> {
     ///
     /// # Returns
     /// A new container of the same kind containing the transformed values.
-    fn fmap<B, M: FnMut(A) -> B>(self, f: M) -> Apply1<Self::Kind, B>;
+    fn fmap<B, M: FnMut(A) -> B>(self, f: M) -> Apply1<Self::Kind1, B>;
 }
 
 /// A trait representing applicative functors.
@@ -104,7 +107,7 @@ pub trait Applicative<A>: Functor<A> {
     ///
     /// # Returns
     /// A new container of the same kind containing the provided value.
-    fn pure(b: A) -> Apply1<Self::Kind, A>;
+    fn pure(b: A) -> Apply1<Self::Kind1, A>;
 
     /// Applies functions contained in an applicative context to values in this applicative context.
     ///
@@ -116,7 +119,7 @@ pub trait Applicative<A>: Functor<A> {
     ///
     /// # Returns
     /// A new container of the same kind containing the results of applying the functions to the values.
-    fn apply<B, F: FnMut(A) -> B>(self, ff: Apply1<Self::Kind, F>) -> Apply1<Self::Kind, B>;
+    fn apply<B, F: FnMut(A) -> B>(self, ff: Apply1<Self::Kind1, F>) -> Apply1<Self::Kind1, B>;
 }
 
 /// A trait representing monads.
@@ -146,7 +149,7 @@ pub trait Monad<A>: Applicative<A> {
     /// # Returns
     /// A new monad of the same kind containing the results of applying the function
     /// and flattening the resulting structure.
-    fn bind<B, F: FnMut(A) -> Apply1<Self::Kind, B>>(self, f: F) -> Apply1<Self::Kind, B>;
+    fn bind<B, F: FnMut(A) -> Apply1<Self::Kind1, B>>(self, f: F) -> Apply1<Self::Kind1, B>;
 }
 
 /// A trait representing types that can be mapped over in two dimensions (bifunctors).
@@ -161,7 +164,7 @@ pub trait Monad<A>: Applicative<A> {
 /// # Type Parameters
 /// * `A` - The type of first values contained in this bifunctor
 /// * `B` - The type of second values contained in this bifunctor
-pub trait Bifunctor<A, B>: Rep2<A, B> {
+pub trait Bifunctor<A, C>: Kinded2<A, C> {
     /// Maps functions over both type parameters of the bifunctor.
     ///
     /// # Parameters
@@ -170,11 +173,11 @@ pub trait Bifunctor<A, B>: Rep2<A, B> {
     ///
     /// # Returns
     /// A new bifunctor containing the transformed values.
-    fn bimap<C, D, F: FnMut(A) -> C, G: FnMut(B) -> D>(
+    fn bimap<B, D, F: FnMut(A) -> B, G: FnMut(C) -> D>(
         self,
         f: F,
         g: G,
-    ) -> Apply2<Self::Kind, C, D>;
+    ) -> Apply2<Self::Kind2, B, D>;
 
     /// Maps a function over the first type parameter of the bifunctor.
     ///
@@ -183,7 +186,7 @@ pub trait Bifunctor<A, B>: Rep2<A, B> {
     ///
     /// # Returns
     /// A new bifunctor with the first type parameter transformed.
-    fn first<C, F: FnMut(A) -> C>(self, f: F) -> Apply2<Self::Kind, C, B>;
+    fn first<B, F: FnMut(A) -> B>(self, f: F) -> Apply2<Self::Kind2, B, C>;
 
     /// Maps a function over the second type parameter of the bifunctor.
     ///
@@ -192,5 +195,5 @@ pub trait Bifunctor<A, B>: Rep2<A, B> {
     ///
     /// # Returns
     /// A new bifunctor with the second type parameter transformed.
-    fn second<D, G: FnMut(B) -> D>(self, g: G) -> Apply2<Self::Kind, A, D>;
+    fn second<D, G: FnMut(C) -> D>(self, g: G) -> Apply2<Self::Kind2, A, D>;
 }

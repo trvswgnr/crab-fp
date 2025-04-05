@@ -297,7 +297,7 @@ pub fn option_to_result<T, E>(opt: Option<T>, err: E) -> Result<T, E> {
 /// let y = fmap(x, f);
 /// assert_eq!(y, Ok(10));
 /// ```
-pub fn fmap<A, B, FA: Functor<A>, F: FnMut(A) -> B>(f: FA, g: F) -> Apply1<FA::Kind, B> {
+pub fn fmap<A, B, FA: Functor<A>, F: FnMut(A) -> B>(f: FA, g: F) -> Apply1<FA::Kind1, B> {
     f.fmap(g)
 }
 
@@ -320,7 +320,7 @@ pub fn fmap<A, B, FA: Functor<A>, F: FnMut(A) -> B>(f: FA, g: F) -> Apply1<FA::K
 /// let y = pure::<i32, Option<_>>(5);
 /// assert_eq!(y, Some(5));
 /// ```
-pub fn pure<A, FA: Applicative<A>>(a: A) -> Apply1<FA::Kind, A> {
+pub fn pure<A, FA: Applicative<A>>(a: A) -> Apply1<FA::Kind1, A> {
     FA::pure(a)
 }
 
@@ -350,7 +350,7 @@ pub fn pure<A, FA: Applicative<A>>(a: A) -> Apply1<FA::Kind, A> {
 /// let y = ap(x, f);
 /// assert_eq!(y, Some(6));
 /// ```
-pub fn ap<A, B, F, FA>(x: FA, fs: Apply1<FA::Kind, F>) -> Apply1<FA::Kind, B>
+pub fn ap<A, B, F, FA>(x: FA, fs: Apply1<FA::Kind1, F>) -> Apply1<FA::Kind1, B>
 where
     F: FnMut(A) -> B,
     FA: Applicative<A>,

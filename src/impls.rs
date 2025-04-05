@@ -20,11 +20,11 @@ use crate::*;
 pub struct OptionKind;
 
 impl Generic1 for OptionKind {
-    type Type<A> = Option<A>;
+    type Rep1<A> = Option<A>;
 }
 
-impl<A> Rep1<A> for Option<A> {
-    type Kind = OptionKind;
+impl<A> Kinded1<A> for Option<A> {
+    type Kind1 = OptionKind;
 }
 
 impl<A> Functor<A> for Option<A> {
@@ -46,7 +46,7 @@ impl<A> Applicative<A> for Option<A> {
 }
 
 impl<A> Monad<A> for Option<A> {
-    fn bind<B, F: FnOnce(A) -> Apply1<Self::Kind, B>>(self, f: F) -> Apply1<Self::Kind, B> {
+    fn bind<B, F: FnOnce(A) -> Apply1<Self::Kind1, B>>(self, f: F) -> Apply1<Self::Kind1, B> {
         self.and_then(f)
     }
 }
@@ -232,21 +232,21 @@ mod option_tests {
 pub struct ResultKind<E>(std::marker::PhantomData<E>);
 
 impl<E> Generic1 for ResultKind<E> {
-    type Type<A> = Result<A, E>;
+    type Rep1<A> = Result<A, E>;
 }
 
-impl<A, E> Rep1<A> for Result<A, E> {
-    type Kind = ResultKind<E>;
+impl<A, E> Kinded1<A> for Result<A, E> {
+    type Kind1 = ResultKind<E>;
 }
 
 pub struct ResultKind2;
 
 impl Generic2 for ResultKind2 {
-    type Type<A, B> = Result<A, B>;
+    type Rep2<A, B> = Result<A, B>;
 }
 
-impl<A, E> Rep2<A, E> for Result<A, E> {
-    type Kind = ResultKind2;
+impl<A, E> Kinded2<A, E> for Result<A, E> {
+    type Kind2 = ResultKind2;
 }
 
 impl<A, E> Functor<A> for Result<A, E> {
@@ -275,25 +275,25 @@ impl<A, E> Monad<A> for Result<A, E> {
     }
 }
 
-impl<A, B> Bifunctor<A, B> for Result<A, B> {
-    fn bimap<C, D, F: FnMut(A) -> C, G: FnMut(B) -> D>(self, mut f: F, mut g: G) -> Result<C, D> {
+impl<A, C> Bifunctor<A, C> for Result<A, C> {
+    fn bimap<B, D, F: FnMut(A) -> B, G: FnMut(C) -> D>(self, mut f: F, mut g: G) -> Result<B, D> {
         match self {
             Ok(a) => Ok(f(a)),
-            Err(b) => Err(g(b)),
+            Err(c) => Err(g(c)),
         }
     }
 
-    fn first<C, F: FnMut(A) -> C>(self, mut f: F) -> Result<C, B> {
+    fn first<B, F: FnMut(A) -> B>(self, mut f: F) -> Result<B, C> {
         match self {
             Ok(a) => Ok(f(a)),
             Err(b) => Err(b),
         }
     }
 
-    fn second<D, G: FnMut(B) -> D>(self, mut g: G) -> Result<A, D> {
+    fn second<D, G: FnMut(C) -> D>(self, mut g: G) -> Result<A, D> {
         match self {
             Ok(a) => Ok(a),
-            Err(b) => Err(g(b)),
+            Err(c) => Err(g(c)),
         }
     }
 }
@@ -566,11 +566,11 @@ mod result_tests {
 pub struct VecKind;
 
 impl Generic1 for VecKind {
-    type Type<A> = Vec<A>;
+    type Rep1<A> = Vec<A>;
 }
 
-impl<A> Rep1<A> for Vec<A> {
-    type Kind = VecKind;
+impl<A> Kinded1<A> for Vec<A> {
+    type Kind1 = VecKind;
 }
 
 impl<A> Functor<A> for Vec<A> {
@@ -619,7 +619,7 @@ impl<A> Applicative<A> for Vec<A> {
 }
 
 impl<A> Monad<A> for Vec<A> {
-    fn bind<B, F: FnMut(A) -> Apply1<Self::Kind, B>>(self, f: F) -> Apply1<Self::Kind, B> {
+    fn bind<B, F: FnMut(A) -> Apply1<Self::Kind1, B>>(self, f: F) -> Apply1<Self::Kind1, B> {
         self.into_iter().flat_map(f).collect()
     }
 }
