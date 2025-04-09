@@ -85,7 +85,7 @@ pub fn compose<A, B, C>(f: fn(B) -> C, g: fn(A) -> B) -> impl Fn(A) -> C {
     move |a| f(g(a))
 }
 
-/// Pipeable trait
+/// The Pipeable trait allows composing functions from left to right
 ///
 /// # Example
 /// ```rust
@@ -102,17 +102,12 @@ pub fn compose<A, B, C>(f: fn(B) -> C, g: fn(A) -> B) -> impl Fn(A) -> C {
 /// let add_one_then_multiply_by_two = add_one.pipe(multiply_by_two);
 /// assert_eq!(add_one_then_multiply_by_two(5), 12);
 /// ```
-///
-/// In a language with pipes, this would look like:
-/// ```ignore
-/// let add_one_then_multiply_by_two = add_one |> multiply_by_two;
-/// ```
 pub trait Pipeable<A, B> {
-    fn pipe<C>(self, f: fn(B) -> C) -> impl Fn(A) -> C;
+    fn pipe<C, F: Fn(B) -> C>(self, f: F) -> impl Fn(A) -> C;
 }
 
-impl<A, B, F: Fn(A) -> B> Pipeable<A, B> for F {
-    fn pipe<C>(self, f: fn(B) -> C) -> impl Fn(A) -> C {
+impl<A, B, Func: Fn(A) -> B> Pipeable<A, B> for Func {
+    fn pipe<C, F: Fn(B) -> C>(self, f: F) -> impl Fn(A) -> C {
         move |a| f(self(a))
     }
 }
