@@ -3,6 +3,14 @@ use crab_fp::*;
 /// This example demonstrates function utilities
 /// such as pipe, compose, curry, and related functionality.
 fn main() {
+    #[cfg(not(feature = "no_std"))]
+    main_std();
+    #[cfg(feature = "no_std")]
+    main_no_std();
+}
+
+#[cfg(not(feature = "no_std"))]
+fn main_std() {
     println!("=== Utility Examples ===\n");
 
     // Basic function definitions
@@ -96,4 +104,13 @@ fn main() {
 
     let result = add_one_stringify_parse_mult_2(5);
     println!("Complex composition result: {:?}", result); // Ok(12)
+}
+
+#[cfg(feature = "no_std")]
+fn main_no_std() {
+    let x = Some(5);
+    let fs = Some(|x: i32| x + 1);
+    let y = ap(x, fs);
+    println!("ap(x, fs) = {:?}", y);
+    println!("\nNOTE: many utility functions are not available with the no_std feature enabled");
 }

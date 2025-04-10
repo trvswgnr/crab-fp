@@ -28,20 +28,25 @@ fn main() {
     println!("allow the same logic to be applied across different container types.\n");
 
     // Price data in cents from different sources
-    let db_prices = vec![1095, 2350, 599]; // prices from database (in cents)
     let api_response: Option<u32> = Some(1499); // price from API (might be missing)
     let file_import: Result<u32, Error> = Ok(899); // price from file import (might fail)
     let failed_import: Result<u32, Error> = Err("File not found".into()); // failed import
 
     // Apply same business logic to different container types
-    let formatted_db_prices = process_data(db_prices);
     let formatted_api_price = process_data(api_response);
     let formatted_import_price = process_data(file_import);
     let formatted_failed = process_data(failed_import);
 
     // Display results
-    println!("Database prices: {:?}", formatted_db_prices);
     println!("API price: {:?}", formatted_api_price);
     println!("Successful import price: {:?}", formatted_import_price);
     println!("Failed import result: {:?}", formatted_failed);
-} 
+
+    // db prices (requires no_std)
+    #[cfg(not(feature = "no_std"))]
+    {
+        let db_prices = vec![1095, 2350, 599]; // prices from database (in cents)
+        let formatted_db_prices = process_data(db_prices);
+        println!("Database prices: {:?}", formatted_db_prices);
+    }
+}

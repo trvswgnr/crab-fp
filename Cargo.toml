@@ -8,4 +8,8 @@ description = "A crate for functional programming in Rust with traits for Functo
 readme = "README.md"
 repository = "https://github.com/trvswgnr/crab-fp"
 
+[features]
+default = ["no_std"]
+no_std = []
+
 [dependencies]
